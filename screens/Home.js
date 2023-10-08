@@ -1,90 +1,203 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TextInput, StyleSheet, ScrollView, ImageBackground, FlatList, TouchableOpacity } from 'react-native';
-import BackGroundImageComponent from '../components/BackgroundImage';
+import { View, Text, StyleSheet, TextInput, FlatList, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
 import BaseUrl from '../data/BaseUrl';
+import { Feather } from '@expo/vector-icons';
 
-function HomeScreen() {
-    const [userStocks, setUserStocks] = useState([]); // Kullanıcı stok verilerini tutmak için bir state
+const HomeScreen = () => {
+    const [stocks, setStocks] = useState([]);
+    const [bistData, setBistData] = useState({ lastBist: '', degisim: '', hacim: '' });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [searchVisible, setSearchVisible] = useState(false);
 
     useEffect(() => {
-        // Bu etkileşimde backend'e istek atarak verileri çekin
-        fetchStockDataFromBackend();
+        fetch(BaseUrl() + 'api/trader')
+            .then(response => response.json())
+            .then(data => {
+                const processedStocks = data.result.map(stock => ({
+                    name: stock.Name,
+                    price: stock.Fiyat,
+                    change: stock.Degisim,
+                }));
+                setStocks(processedStocks);
+
+                setBistData({
+                    lastBist: data.BistData.lastBist,
+                    degisim: data.BistData.degisim,
+                    hacim: data.BistData.hacim,
+                });
+
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Veri alınamadı:', error);
+                setLoading(false);
+            });
     }, []);
 
-    // Backend'den stok verilerini çeken işlev
-    const fetchStockDataFromBackend = async () => {
-        try {
-            const requestUrl = BaseUrl() + 'api/user-stocks';
-            const response = await fetch(requestUrl, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-token': global.token,
-                },
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setUserStocks(data.data.userStocks);
-            } else {
-                console.error('Veri çekme hatası:', data.error);
-            }
-        } catch (error) {
-            console.error('Veri çekme hatası:', error);
-        }
+    const filteredStocks = stocks.filter(stock =>
+        stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    const toggleSearch = () => {
+        setSearchVisible(!searchVisible);
     };
-
-    // Her bir hisse senedi öğesini gösterecek olan işlev
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.recipeBox}
-            onPress={() => {
-                // Seçilen hisse senedine tıklamak için yapılacak eylemi burada tanımlayabilirsiniz
-            }}
-        >
-            <Text style={styles.recipeName}>{item.name}</Text>
-            <Text style={styles.recipeIngredients}>Price: {item.price}</Text>
-            <Text style={styles.recipeIngredients}>Volume: {item.volume}</Text>
-            <Text style={styles.recipeIngredients}>Value: {item.value}</Text>
-            <Text style={styles.recipeIngredients}>Date: {item.date}</Text>
-        </TouchableOpacity>
-    );
-
     return (
-        <ImageBackground source={require('../assets/home.png')} style={styles.backgroundImage}>
-                <FlatList
-                    data={userStocks}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item._id} // Her öğeyi benzersiz bir şekilde tanımlamak için kullanabileceğiniz bir özellik seçin
-                />
-        </ImageBackground>
-    );
-}
+        <SafeAreaView style={styles.container}>
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <>
+                    <View style={styles.bistContainer}>
+                        <Text style={styles.bistTitle}>BIST100</Text>
+                        <View style={styles.separator2}></View>
+                        <Text style={[styles.bistValue, bistData.degisim.startsWith('+') ? styles.greenText : styles.redText]}>
+                            {bistData.lastBist}
+                        </Text>
+                        <Text style={[styles.bistChange, bistData.degisim.startsWith('+') ? styles.greenText : styles.redText]}>
+                            {bistData.degisim}
+                        </Text>
+                        <Text style={styles.bistHacim}>Hacim: {bistData.hacim} min lot TL</Text>
+                    </View>
 
-export default HomeScreen;
+                    <View style={styles.hisselerContainer}>
+                        <View style={styles.hisselerHeader}>
+                            <Text style={styles.hisselerTitle}>Hisseler</Text>
+                            <TouchableOpacity style={styles.searchIcon} onPress={toggleSearch}>
+                                <Feather name={searchVisible ? 'x' : 'search'} size={24} color="black" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.separator}></View>
+                        {searchVisible && (
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Hisse Ara"
+                                onChangeText={text => setSearchQuery(text)}
+                                value={searchQuery}
+                            />
+                        )}
+                        <FlatList
+                            data={filteredStocks}
+                            keyExtractor={(item, index) => index.toString()}
+                            ListHeaderComponent={!filteredStocks.length ? (<Text style={{ textAlign: 'center' }}>Hisse bulunamadı</Text>) : null}
+                            renderItem={({ item }) => (
+                                <View style={[styles.stockContainer, item.change.startsWith('+') ? styles.greenBackground : styles.redBackground]}>
+                                    <Text style={styles.stockName}>{item.name}</Text>
+                                    <Text style={styles.stockPrice}>{item.price}</Text>
+                                    <Text style={styles.stockChange}>{item.change}</Text>
+                                </View>
+                            )}
+                        />
+                    </View>
+                </>
+            )}
+        </SafeAreaView>
+    );
+};
 
 const styles = StyleSheet.create({
-    recipeBox: {
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        width: '90%',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f0f0f0',
+    },
+    bistContainer: {
+        alignItems: 'center',
+        backgroundColor: 'lightblue',
         padding: 10,
+        width: '90%',
+        borderRadius: 5,
+        marginTop: 290,
         marginBottom: 10,
     },
-    recipeName: {
-        fontSize: 18,
+    bistTitle: {
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 5,
     },
-    recipeIngredients: {
+    bistValue: {
+        fontSize: 32,
+        fontWeight: 'bold',
+    },
+    bistChange: {
+        fontSize: 20,
+    },
+    bistHacim: {
         fontSize: 16,
     },
-    backgroundImage: {
-        flex: 1,
-        resizeMode: 'cover',
+    greenText: {
+        color: 'green',
+    },
+    redText: {
+        color: 'red',
+    },
+    hisselerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    searchIcon: {
+        position: 'absolute',
+        right: 10,
         justifyContent: 'center',
+        alignItems: 'center',
+    },
+    hisselerContainer: {
+        borderWidth: 1,
+        borderColor: 'gray',
+        padding: 10,
+        borderRadius: 5,
+        width: '90%',
+    },
+    separator: {
+        borderBottomWidth: 1,
+        borderBottomColor: 'gray',
+        marginBottom: 10,
+        width: '100%',
+    },
+    separator2: {
+        borderBottomWidth: 1,
+        borderBottomColor: 'black',
+        marginBottom: 10,
+    },
+    searchInput: {
+        width: '80%',
+        height: 40,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
+        marginBottom: 20,
+        paddingRight: 10,
+    },
+    stockContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        padding: 10,
+        marginBottom: 10,
+        borderRadius: 5,
+    },
+    greenBackground: {
+        backgroundColor: 'green',
+    },
+    redBackground: {
+        backgroundColor: 'red',
+    },
+    stockName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    stockPrice: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    stockChange: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
     },
 });
+
+export default HomeScreen;
