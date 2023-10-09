@@ -40,7 +40,9 @@ const HomeScreen = () => {
     );
     const toggleSearch = () => {
         setSearchVisible(!searchVisible);
+        setSearchQuery('');
     };
+
     return (
         <SafeAreaView style={styles.container}>
             {loading ? (
@@ -56,14 +58,14 @@ const HomeScreen = () => {
                         <Text style={[styles.bistChange, bistData.degisim.startsWith('+') ? styles.greenText : styles.redText]}>
                             {bistData.degisim}
                         </Text>
-                        <Text style={styles.bistHacim}>Hacim: {bistData.hacim} min lot TL</Text>
+                        <Text style={styles.bistHacim}>Hacim: {bistData.hacim} </Text>
                     </View>
 
                     <View style={styles.hisselerContainer}>
                         <View style={styles.hisselerHeader}>
                             <Text style={styles.hisselerTitle}>Hisseler</Text>
                             <TouchableOpacity style={styles.searchIcon} onPress={toggleSearch}>
-                                <Feather name={searchVisible ? 'x' : 'search'} size={24} color="black" />
+                                <Feather name={searchVisible ? 'x' : 'search'} size={24} color="white" />
                             </TouchableOpacity>
                         </View>
                         <View style={styles.separator}></View>
@@ -71,14 +73,16 @@ const HomeScreen = () => {
                             <TextInput
                                 style={styles.searchInput}
                                 placeholder="Hisse Ara"
+                                placeholderTextColor="white"
                                 onChangeText={text => setSearchQuery(text)}
                                 value={searchQuery}
                             />
                         )}
                         <FlatList
+                            contentContainerStyle={styles.stockList}
                             data={filteredStocks}
                             keyExtractor={(item, index) => index.toString()}
-                            ListHeaderComponent={!filteredStocks.length ? (<Text style={{ textAlign: 'center' }}>Hisse bulunamadı</Text>) : null}
+                            ListHeaderComponent={!filteredStocks.length ? (<Text style={styles.emptyMessage}>Hisse bulunamadı</Text>) : null}
                             renderItem={({ item }) => (
                                 <View style={[styles.stockContainer, item.change.startsWith('+') ? styles.greenBackground : styles.redBackground]}>
                                     <Text style={styles.stockName}>{item.name}</Text>
@@ -98,21 +102,21 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#232D3F',
     },
     bistContainer: {
         alignItems: 'center',
-        backgroundColor: 'lightblue',
+        backgroundColor: '#008170',
         padding: 10,
         width: '90%',
         borderRadius: 5,
-        marginTop: 290,
+        marginTop: 20,
         marginBottom: 10,
     },
     bistTitle: {
         fontSize: 24,
         fontWeight: 'bold',
+        color: '#005B41',
     },
     bistValue: {
         fontSize: 32,
@@ -125,14 +129,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     greenText: {
-        color: 'green',
+        color: 'lightgreen',
     },
     redText: {
-        color: 'red',
+        color: 'lightcoral',
     },
     hisselerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
+        fontStyle: 'italic',
+        color: '#005B41',
         marginBottom: 10,
     },
     searchIcon: {
@@ -143,16 +149,15 @@ const styles = StyleSheet.create({
     },
     hisselerContainer: {
         borderWidth: 1,
-        borderColor: 'gray',
+        borderColor: 'white',
         padding: 10,
         borderRadius: 5,
         width: '90%',
     },
     separator: {
         borderBottomWidth: 1,
-        borderBottomColor: 'gray',
+        borderBottomColor: 'white',
         marginBottom: 10,
-        width: '100%',
     },
     separator2: {
         borderBottomWidth: 1,
@@ -163,7 +168,7 @@ const styles = StyleSheet.create({
         width: '80%',
         height: 40,
         borderWidth: 1,
-        borderColor: 'gray',
+        borderColor: 'white',
         borderRadius: 5,
         marginBottom: 20,
         paddingRight: 10,
@@ -177,26 +182,32 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderRadius: 5,
     },
+    stockList: {
+        paddingBottom: 250,
+    },
     greenBackground: {
-        backgroundColor: 'green',
+        backgroundColor: 'lightgreen',
     },
     redBackground: {
-        backgroundColor: 'red',
+        backgroundColor: 'lightcoral',
     },
     stockName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',
+        color: 'black',
     },
     stockPrice: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',
+        color: 'black',
     },
     stockChange: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'white',
+        color: 'black',
+    },
+    emptyMessage: {
+        textAlign: 'center',
     },
 });
 

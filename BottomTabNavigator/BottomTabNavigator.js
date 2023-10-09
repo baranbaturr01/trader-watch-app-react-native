@@ -10,7 +10,15 @@ const Tab = createBottomTabNavigator();
 
 const BottomTabNavigator = () => {
     return (
-        <Tab.Navigator>
+        <Tab.Navigator screenOptions={({ route }) => {
+            return {
+                headerShown: false,
+                tabBarActiveTintColor: '#FFFFFF',
+                tabBarStyle: {
+                    backgroundColor: '#005B41',
+                }
+            }
+        }}>
             <Tab.Screen name="Ana Sayfa" options={{
                 tabBarIcon: ({ color, size }) => (
                     <Ionicons name="analytics" size={size} color={color} />
