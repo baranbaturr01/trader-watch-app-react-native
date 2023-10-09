@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ImageBackground, TouchableOpacity, SafeAreaView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Keyboard } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard, Platform, ActivityIndicator, Dimensions, ScrollView, KeyboardAvoidingView } from 'react-native';
 import BaseUrl from '../../data/BaseUrl';
 import Toast from 'react-native-toast-message';
 
-const Login = ({ navigation }) => {
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
+
+const Login = ({ navigation, onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false); // İstek yükleme durumu
-    const [error, setError] = useState(null); // Hata durumu
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const sendRequestToLogin = async () => {
         setLoading(true);
@@ -44,32 +47,27 @@ const Login = ({ navigation }) => {
             setPassword('');
             setError(null);
 
-            navigation.navigate('BottomTabs');
+            onLogin(data.data.token);
         }
-
-
     }
 
     return (
-        <ImageBackground source={require('../../assets/trade_login.jpg')} style={styles.image}>
+        <ScrollView contentContainerStyle={styles.container}>
             <KeyboardAvoidingView
                 style={styles.overlay}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <View style={styles.logoContainer}>
-                    <Image source={require('../../assets/batur.jpg')} style={styles.logo} />
-                </View>
-                <View style={styles.titleContainer}>
-                    <Text style={styles.text}>Trader Watch</Text>
+                <View style={styles.circularFrame}>
+                    <Text style={styles.circularFrameText}>Stock Watch</Text>
                 </View>
                 <TextInput
                     onChangeText={text => setEmail(text)}
-                    style={[styles.input, error && styles.errorInput]} // Hata durumunda alanın rengini değiştir
+                    style={[styles.input, error && styles.errorInput]}
                     placeholder="Email"
                     keyboardType="email-address"
                 />
                 <TextInput
-                    style={[styles.input, error && styles.errorInput]} // Hata durumunda alanın rengini değiştir
+                    style={[styles.input, error && styles.errorInput]}
                     placeholder="Password"
                     secureTextEntry={true}
                     onChangeText={text => setPassword(text)}
@@ -78,29 +76,19 @@ const Login = ({ navigation }) => {
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
 
-                {/* Yükleme durumunu göster */}
                 {loading && <ActivityIndicator size="large" color="white" />}
-
             </KeyboardAvoidingView>
-            <Toast ref={(ref) => Toast.setRef(ref)} />
-        </ImageBackground>
+        </ScrollView>
     );
 };
 
 export default Login;
 
 const styles = StyleSheet.create({
-    errorText: {
-        color: 'red',
-        fontSize: 16,
-        marginTop: 10,
-    },
     container: {
         flex: 1,
-    },
-    image: {
-        flex: 1,
-        resizeMode: 'cover',
+        backgroundColor: '#232D3F',
+        alignItems: 'center',
         justifyContent: 'center',
     },
     overlay: {
@@ -108,48 +96,51 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    logoContainer: {
+    circularFrame: {
+        width: windowWidth * 0.4,
+        height: windowWidth * 0.4,
         backgroundColor: 'transparent',
-        padding: 10,
-        borderRadius: 10,
+        borderRadius: windowWidth * 0.2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: windowHeight * 0.02,
+        borderColor: '#005B41',
+        borderWidth: 2,
     },
-    logo: {
-        width: 100,
-        height: 100,
-    },
-    titleContainer: {
-        marginTop: 10,
-    },
-    text: {
-        fontSize: 30,
-        color: 'white',
+    circularFrameText: {
+        fontSize: windowWidth * 0.08,
+        fontWeight: 'bold',
+        color: '#005B41',
+        textAlign: 'center',
     },
     input: {
-        width: 350,
-        height: 55,
-        backgroundColor: 'white',
-        margin: 10,
-        padding: 8,
+        width: windowWidth * 0.8,
+        height: windowHeight * 0.06,
+        backgroundColor: 'grey',
+        marginVertical: windowHeight * 0.015,
+        padding: windowWidth * 0.03,
         color: 'black',
-        borderRadius: 14,
-        fontSize: 18,
+        borderRadius: windowWidth * 0.07,
+        fontSize: windowWidth * 0.045,
         fontWeight: '500',
     },
     errorInput: {
-        borderColor: 'red', // Hata durumunda alanın etrafını kızart
+        borderColor: 'red',
     },
     buttonContainer: {
-        marginTop: 30,
-        width: 200,
-        height: 50,
-        backgroundColor: 'white',
-        borderRadius: 14,
+        marginTop: windowHeight * 0.04,
+        width: windowWidth * 0.5,
+        height: windowHeight * 0.07,
+        backgroundColor: 'transparent',
+        borderRadius: windowWidth * 0.07,
         justifyContent: 'center',
         alignItems: 'center',
+        borderColor: '#005B41',
+        borderWidth: 2,
     },
     buttonText: {
-        fontSize: 18,
+        fontSize: windowWidth * 0.06,
         fontWeight: '500',
-        color: 'black',
+        color: '#005B41',
     },
 });

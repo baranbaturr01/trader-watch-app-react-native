@@ -18,15 +18,8 @@ export default function CustomButton(props) {
 }
 
 const styles = StyleSheet.create({
-    button: {
-        backgroundColor: 'lightblue',
-        padding: 15,
-        borderRadius: 12,
-        width: '50%',
-        alignItems: 'center',
-    },
     buttonText: {
-        color: 'black',
+        color: 'white',
         fontSize: 20,
     }
 })
