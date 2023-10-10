@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     View,
     Text,
@@ -16,9 +16,13 @@ import {
 import BaseUrl from '../data/BaseUrl';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import { Picker, onOpen } from 'react-native-actions-sheet-picker';
 
 const UserTrades = () => {
+    const [stocks, setStocks] = useState([]);
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+    const [selectedStock, setSelectedStock] = useState(undefined);
+    const [queryStock, setQueryStock] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
     const [userStocks, setUserStocks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,6 +45,7 @@ const UserTrades = () => {
 
     useEffect(() => {
         fetchStockDataFromBackend();
+        fetchStockNamesFromBackend();
     }, []);
 
     const fetchStockDataFromBackend = async () => {
@@ -65,6 +70,43 @@ const UserTrades = () => {
             console.error('Veri çekme hatası:', error);
         }
     };
+
+    const fetchStockNamesFromBackend = async () => {
+        const stockNames = [];
+        try {
+            const requestUrl = BaseUrl() + 'api/trader';
+            const response = await fetch(requestUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-token': global.token,
+                },
+            });
+            const data = await response.json();
+
+            const stocksBackend = data.result
+            stocksBackend.forEach(stock => {
+                stockNames.push(stock.Name)
+            });
+            setStocks(stockNames);
+        } catch (error) {
+            console.error('Veri çekme hatası:', error);
+        }
+    }
+
+    const filteredStocks = useMemo(() => {
+        if (stocks.length > 0) {
+            return stocks.filter((stock) => {
+                return stock.toLowerCase().includes(queryStock.toLowerCase());
+            });
+        } else {
+            return [];
+        }
+    }, [stocks, queryStock]);
+
+    const onSearchStock = (text) => {
+        setQueryStock(text);
+    }
 
     const renderStockCard = ({ item }) => (
         <View style={styles.stockCard}>
@@ -167,11 +209,22 @@ const UserTrades = () => {
                 >
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Yeni Hisse Ekle</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Hisse Adı"
-                            placeholderTextColor={'grey'}
-                            onChangeText={(text) => setNewStock({ ...newStock, name: text })}
+                        <TouchableOpacity
+                            style={{ backgroundColor: 'lightblue', padding: 10, borderRadius: 5, marginBottom: 10 }}
+                            onPress={() => {
+                                onOpen('stock');
+                            }}
+                        >
+                            <Text>{selectedStock != undefined ? selectedStock : "Hisse Sec"} </Text>
+                        </TouchableOpacity>
+                        <Picker
+                            id="stock"
+                            data={filteredStocks}
+                            inputValue={queryStock}
+                            searchable={true}
+                            label="Hisse Adı Seç"
+                            setSelected={setSelectedStock}
+                            onSearch={onSearchStock}
                         />
                         <TextInput
                             style={styles.input}

@@ -1,4 +1,4 @@
 
 export default function BaseUrl() {
-    return 'http://7e6a-78-173-84-47.ngrok-free.app/'
+    return 'http://a8c8-78-173-33-177.ngrok-free.app/'
 }
